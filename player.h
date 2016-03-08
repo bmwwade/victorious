@@ -13,15 +13,15 @@ public:
     ~Player();
     
     Move *doMove(Move *opponentsMove, int msLeft);
-
+    void setBoard(Board *newBoard);
     // Flag to tell if the player is running within the test_minimax context
     bool testingMinimax;
-    Board stdBoard;
+    Board *stdBoard;
     Side mySide;
     Side otherSide;
 };
 
-int improveHeuristic(int base, int x, int y);
+int improveHeuristic(int base, int i, int j);
 int miniMax(Board *board, Side mySide, Side otherSide);
 int calcBase(Board *board, Side side);
 #endif

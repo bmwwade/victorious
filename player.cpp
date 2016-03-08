@@ -17,15 +17,19 @@ Player::Player(Side side) {
     {
         otherSide = BLACK;
     }
-    stdBoard = Board();
+    stdBoard = new Board();
 }
 
 /*
  * Destructor for the player.
  */
 Player::~Player() {
+    delete stdBoard;
 }
 
+void Player::setBoard(Board *newBoard) {
+    stdBoard = newBoard->copy();
+}
 /*
  * Compute the next move given the opponent's last move. Your AI is
  * expected to keep track of the board on its own. If this is the first move,
@@ -39,8 +43,8 @@ Player::~Player() {
  * return NULL.
  */
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
-    stdBoard.doMove(opponentsMove, otherSide);
-    if (!stdBoard.hasMoves(mySide))
+    stdBoard->doMove(opponentsMove, otherSide);
+    if (!stdBoard->hasMoves(mySide))
     {
         return NULL;
     }
@@ -50,28 +54,33 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     {
         for (int j = 0; j < 8; j++)
         {
-            Move *testMove = new Move(i, j);
-            if (stdBoard.checkMove(testMove, mySide))
+            Move testMove(i, j);
+            if (stdBoard->checkMove(&testMove, mySide))
             {
-                Board *testBoard = stdBoard.copy();
-                testBoard->doMove(testMove, mySide);
+                Board *testBoard = stdBoard->copy();
+                testBoard->doMove(&testMove, mySide);
 
                 int base = calcBase(testBoard, mySide);
-
-                if (!testBoard->hasMoves(otherSide))
+                if (testingMinimax)
                 {
-                    scoreboard[i][j] = improveHeuristic(base, i, j);
+                    if (!testBoard->hasMoves(otherSide))
+                    {
+                        scoreboard[i][j] = base;
+                    }   
+                    else
+                    {
+                        scoreboard[i][j] = miniMax(testBoard, mySide, otherSide);
+                    }
                 }
                 else
                 {
-                    scoreboard[i][j] = miniMax(testBoard, mySide, otherSide);
+                    scoreboard[i][j] = improveHeuristic(base, i, j);
                 }
             }
             else
             {
                 scoreboard[i][j] = -10000;
             }
-            delete testMove;
         }
     }
     int maxi = 0, maxj = 0;
@@ -87,7 +96,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         }
     }
     Move *nextMove = new Move(maxi, maxj);
-    stdBoard.doMove(nextMove, mySide);
+    stdBoard->doMove(nextMove, mySide);
     return nextMove;
 
 }
@@ -155,16 +164,17 @@ int improveHeuristic(int base, int i, int j)
 
 int miniMax(Board *board, Side mySide, Side otherSide)
 {
+
     int minScore = 1000;
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
         {
-            Move *test = new Move(i, j);
-            if (board->checkMove(test, otherSide))
+            Move test(i, j);
+            if (board->checkMove(&test, otherSide))
             {
                 Board *newBoard = board->copy();
-                newBoard->doMove(test, otherSide);
+                newBoard->doMove(&test, otherSide);
                 
                 int score = calcBase(newBoard, mySide);
                 if (score < minScore)
@@ -172,7 +182,6 @@ int miniMax(Board *board, Side mySide, Side otherSide)
                     minScore = score;
                 }
             }
-            delete test;
         }
     }
 
