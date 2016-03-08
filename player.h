@@ -23,4 +23,5 @@ public:
 
 int improveHeuristic(int base, int x, int y);
 int miniMax(Board *board, Side mySide, Side otherSide);
+int calcBase(Board *board, Side side);
 #endif

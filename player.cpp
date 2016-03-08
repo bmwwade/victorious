@@ -1,5 +1,5 @@
 #include "player.h"
-
+#include <cmath>
 /*
  * Constructor for the player; initialize everything here. The side your AI is
  * on (BLACK or WHITE) is passed in as "side". The constructor must finish 
@@ -45,7 +45,7 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         return NULL;
     }
 
-    int scoreboard[9][9];
+    int scoreboard[8][8];
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
@@ -54,19 +54,9 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
             if (stdBoard.checkMove(testMove, mySide))
             {
                 Board *testBoard = stdBoard.copy();
-                int black, white;
                 testBoard->doMove(testMove, mySide);
-                black = testBoard->countBlack();
-                white = testBoard->countWhite();
-                int base = 0;
-                if (mySide == BLACK)
-                {
-                    base = black - white;
-                }
-                else 
-                {
-                    base = white - black;
-                }
+
+                int base = calcBase(testBoard, mySide);
 
                 if (!testBoard->hasMoves(otherSide))
                 {
@@ -102,6 +92,23 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 
 }
 
+int calcBase(Board *board, Side side)
+{
+    int black, white, base;
+    black = board->countBlack();
+    white = board->countWhite();
+    if (side == BLACK)
+    {
+        base = black - white;
+    }
+    else
+    {
+        base = white - black;
+    }
+
+    return base;
+}
+
 int improveHeuristic(int base, int i, int j)
 {
     int score = 0;
@@ -109,39 +116,35 @@ int improveHeuristic(int base, int i, int j)
     {
         if (j == 0 || j == 7)
         {
-            score = 10 + base;
+            score = 3 * abs(base);
         }
         else if (j == 1 || j == 6)
         {
-            score = base - 7;
+            score = -3 * abs(base);
         }
         else
         {
-            score = 3 + base;
+            score = 2 * base;
         }
     }
     else if (i == 1 || i == 6)
     {
-        if(j == 0 || j == 7)
+        if(j == 0 || j == 1 || j == 6 || j == 7)
         {
-            score = base - 7;
-        }
-        if (j == 1 || j == 6)
-        {
-            score = base - 10;
+            score = -3 * abs(base);
         }
         else
         {
-            score = base - 3;
+            score = -2 * abs(base);
         }
     }
     else if (j == 0 || j == 7)
     {
-        score = base + 3;
+        score = 2 * abs(base);
     }
     else if (j == 1 || j == 6)
     {
-        score = base - 3;
+        score = -2 * abs(base);
     }
     else
     {
@@ -162,23 +165,14 @@ int miniMax(Board *board, Side mySide, Side otherSide)
             {
                 Board *newBoard = board->copy();
                 newBoard->doMove(test, otherSide);
-                int black, white, score = 0;
-                black = newBoard->countBlack();
-                white = newBoard->countWhite();
-                if (mySide == BLACK)
-                {
-                    score = black - white;
-                }
-                else 
-                {
-                    score = white - black;
-                }
-
+                
+                int score = calcBase(newBoard, mySide);
                 if (score < minScore)
                 {
                     minScore = score;
                 }
             }
+            delete test;
         }
     }
 
