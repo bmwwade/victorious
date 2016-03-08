@@ -21,4 +21,5 @@ public:
     Side otherSide;
 };
 
+int improveHeuristic(int base, int x, int y);
 #endif

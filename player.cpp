@@ -58,15 +58,16 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
                 testBoard->doMove(testMove, mySide);
                 black = testBoard->countBlack();
                 white = testBoard->countWhite();
+                int base = 0;
                 if (mySide == BLACK)
                 {
-                    scoreboard[i][j] = black - white;
+                    base = black - white;
                 }
-                else
+                else 
                 {
-                    scoreboard[i][j] = white - black;
+                    base = white - black;
                 }
-
+                scoreboard[i][j] = improveHeuristic(base, i, j);
             }
             else
             {
@@ -91,4 +92,52 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     stdBoard.doMove(nextMove, mySide);
     return nextMove;
 
+}
+
+int improveHeuristic(int base, int i, int j)
+{
+    int score = 0;
+    if (i == 0 || i == 7)
+    {
+        if (j == 0 || j == 7)
+        {
+            score = 10 + base;
+        }
+        else if (j == 1 || j == 6)
+        {
+            score = base - 7;
+        }
+        else
+        {
+            score = 3 + base;
+        }
+    }
+    else if (i == 1 || i == 6)
+    {
+        if(j == 0 || j == 7)
+        {
+            score = base - 7;
+        }
+        if (j == 1 || j == 6)
+        {
+            score = base - 10;
+        }
+        else
+        {
+            score = base - 3;
+        }
+    }
+    else if (j == 0 || j == 7)
+    {
+        score = base + 3;
+    }
+    else if (j == 1 || j == 6)
+    {
+        score = base - 3;
+    }
+    else
+    {
+        score = base;
+    }
+    return score;
 }
