@@ -67,7 +67,15 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
                 {
                     base = white - black;
                 }
-                scoreboard[i][j] = improveHeuristic(base, i, j);
+
+                if (!testBoard->hasMoves(otherSide))
+                {
+                    scoreboard[i][j] = improveHeuristic(base, i, j);
+                }
+                else
+                {
+                    scoreboard[i][j] = miniMax(testBoard, mySide, otherSide);
+                }
             }
             else
             {
@@ -140,4 +148,39 @@ int improveHeuristic(int base, int i, int j)
         score = base;
     }
     return score;
+}
+
+int miniMax(Board *board, Side mySide, Side otherSide)
+{
+    int minScore = 1000;
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++)
+        {
+            Move *test = new Move(i, j);
+            if (board->checkMove(test, otherSide))
+            {
+                Board *newBoard = board->copy();
+                newBoard->doMove(test, otherSide);
+                int black, white, score = 0;
+                black = newBoard->countBlack();
+                white = newBoard->countWhite();
+                if (mySide == BLACK)
+                {
+                    score = black - white;
+                }
+                else 
+                {
+                    score = white - black;
+                }
+
+                if (score < minScore)
+                {
+                    minScore = score;
+                }
+            }
+        }
+    }
+
+    return minScore;
 }
