@@ -1,5 +1,6 @@
 #include "player.h"
 #include <cmath>
+#include <climits>
 /*
  * Constructor for the player; initialize everything here. The side your AI is
  * on (BLACK or WHITE) is passed in as "side". The constructor must finish 
@@ -18,6 +19,9 @@ Player::Player(Side side) {
         otherSide = BLACK;
     }
     stdBoard = new Board();
+
+    alpha = INT_MIN;
+    beta = INT_MAX;
 }
 
 /*
@@ -64,18 +68,12 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
                 if (testingMinimax)
                 {
                     if (!testBoard->hasMoves(otherSide))
-                    {
-                        scoreboard[i][j] = base;
-                    }   
+                        scoreboard[i][j] = base;   
                     else
-                    {
                         scoreboard[i][j] = miniMax(testBoard, mySide, otherSide);
-                    }
                 }
                 else
-                {
-                    scoreboard[i][j] = improveHeuristic(base, i, j);
-                }
+                    scoreboard[i][j] = deepMiniMax(testBoard, true, 4);
             }
             else
             {
@@ -83,6 +81,69 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
             }
         }
     }
+    Move *nextMove = getBestMove(scoreboard);
+    stdBoard->doMove(nextMove, mySide);
+    return nextMove;
+
+}
+
+int Player::deepMiniMax(Board *board, bool isMax, int depth)
+{
+    Side currSide;
+    Side nextSide;
+    if (isMax)
+    {
+        currSide = mySide;
+        nextSide = otherSide;
+    }
+    else
+    {
+        currSide = otherSide;
+        nextSide = mySide;
+    }
+
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++)
+        {
+            if (alpha >= beta)
+            {
+                if (isMax)
+                    return alpha;
+                else
+                    return beta;
+            }
+            Move test(i, j);
+            if (board->checkMove(&test, nextSide))
+            {
+                Board *newBoard = board->copy();
+                newBoard->doMove(&test, nextSide);
+                int score;
+                if (depth == 0)
+                {
+                    score = calcBase(newBoard, currSide);
+                    score = improveHeuristic(score, i, j);
+                }
+                else
+                    score = deepMiniMax(newBoard, !isMax, depth - 1);
+                if (isMax && score > alpha)
+                    alpha = score;
+                else if (!isMax && score < beta)
+                    beta = score;
+            }
+        }
+    }
+    if (isMax)
+    {
+        return alpha;
+    }
+    else
+        return beta;
+
+}
+
+Move *getBestMove(int scoreboard[][8])
+{
     int maxi = 0, maxj = 0;
     for (int i = 0; i < 8; i++)
     {
@@ -95,10 +156,8 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
             }
         }
     }
-    Move *nextMove = new Move(maxi, maxj);
-    stdBoard->doMove(nextMove, mySide);
-    return nextMove;
-
+    Move *bestMove = new Move(maxi, maxj);
+    return bestMove;
 }
 
 int calcBase(Board *board, Side side)
@@ -125,35 +184,39 @@ int improveHeuristic(int base, int i, int j)
     {
         if (j == 0 || j == 7)
         {
-            score = 3 * abs(base);
+            score = base + 6;
         }
         else if (j == 1 || j == 6)
         {
-            score = -3 * abs(base);
+            score = base - 5;
         }
         else
         {
-            score = 2 * base;
+            score = base + 3;
         }
     }
     else if (i == 1 || i == 6)
     {
-        if(j == 0 || j == 1 || j == 6 || j == 7)
+        if (j == 0 || j == 7)
         {
-            score = -3 * abs(base);
+            score = base - 5;
+        }
+        else if (j == 1 || j == 6)
+        {
+            score = base - 6;
         }
         else
         {
-            score = -2 * abs(base);
+            score = base - 2;
         }
     }
     else if (j == 0 || j == 7)
     {
-        score = 2 * abs(base);
+        score = base + 3;
     }
     else if (j == 1 || j == 6)
     {
-        score = -2 * abs(base);
+        score = base - 2;
     }
     else
     {
@@ -187,3 +250,4 @@ int miniMax(Board *board, Side mySide, Side otherSide)
 
     return minScore;
 }
+

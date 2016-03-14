@@ -19,9 +19,17 @@ public:
     Board *stdBoard;
     Side mySide;
     Side otherSide;
+
+private:
+    int alpha;
+    int beta;
+    int deepMiniMax(Board *board, bool isMax, int depth);
 };
 
+Move *getBestMove(int scoreboard[][8]);
 int improveHeuristic(int base, int i, int j);
 int miniMax(Board *board, Side mySide, Side otherSide);
 int calcBase(Board *board, Side side);
+
+
 #endif
